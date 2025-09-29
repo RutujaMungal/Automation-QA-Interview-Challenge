@@ -1,63 +1,44 @@
-import { Page, Locator } from '@playwright/test';
-this.isChildToggle = this.page.locator('input[name="isChild"]');
-this.parentSearch = this.page.locator('input[name="parentSearch"]');
-this.createFamilyButton = this.page.locator('button[data-testid="create-family"]');
-this.submitButton = this.page.locator('button[type="submit"], button[data-testid="save-student"]');
-}
+import { BasePage } from './BasePage';
 
+export class StudentFormPage extends BasePage {
+  readonly firstName = this.page.locator('[data-sb-qa="student-input-first-name"]');
+  readonly lastName = this.page.locator('[data-sb-qa="student-input-last-name"]');
+  readonly email = this.page.locator('[data-sb-qa="student-input-email"]');
+  readonly phone = this.page.locator('[data-sb-qa="student-input-phone"]');
+  readonly smsCapable = this.page.locator('[data-sb-qa="student-checkbox-sms"]');
+  readonly studentTypeAdult = this.page.locator('[data-sb-qa="student-type-adult"]');
+  readonly studentTypeChild = this.page.locator('[data-sb-qa="student-type-child"]');
+  readonly newFamily = this.page.locator('[data-sb-qa="family-new"]');
+  readonly existingFamily = this.page.locator('[data-sb-qa="family-existing"]');
+  readonly parentFirstName = this.page.locator('[data-sb-qa="parent-first-name"]');
+  readonly parentLastName = this.page.locator('[data-sb-qa="parent-last-name"]');
+  readonly parentEmail = this.page.locator('[data-sb-qa="parent-email"]');
+  readonly saveBtn = this.page.locator('[data-sb-qa="student-btn-save"]');
 
-async goToAddStudent() {
-await this.navigate('/Teacher/v2/en/students/add');
-await this.waitForLoad();
-}
+  async enterStudentBasic(firstName: string, lastName: string, email?: string, phone?: string) {
+    await this.firstName.fill(firstName);
+    await this.lastName.fill(lastName);
+    if (email) await this.email.fill(email);
+    if (phone) await this.phone.fill(phone);
+  }
 
+  async selectStudentType(type: 'Adult' | 'Child') {
+    if (type === 'Adult') await this.studentTypeAdult.click();
+    else await this.studentTypeChild.click();
+  }
 
-async fillBasicInfo({ firstName, lastName, email, phone, dob }: any) {
-if (firstName) await this.firstName.fill(firstName);
-if (lastName) await this.lastName.fill(lastName);
-if (email) await this.email.fill(email);
-if (phone) await this.phone.fill(phone);
-if (dob) await this.dob.fill(dob);
-}
+  async selectFamily(option: 'New' | 'Existing') {
+    if (option === 'New') await this.newFamily.click();
+    else await this.existingFamily.click();
+  }
 
+  async enterParentDetails(firstName: string, lastName: string, email: string) {
+    await this.parentFirstName.fill(firstName);
+    await this.parentLastName.fill(lastName);
+    await this.parentEmail.fill(email);
+  }
 
-async markAsChild() {
-if (!(await this.isChildToggle.isChecked())) await this.isChildToggle.check();
-}
-
-
-async linkToExistingParent(parentEmailOrName: string) {
-await this.parentSearch.fill(parentEmailOrName);
-// wait for suggestions and pick first
-const suggestion = this.page.locator('.parent-suggestion').first();
-await suggestion.waitFor();
-await suggestion.click();
-}
-
-
-async createNewFamily(parentAttrs: { firstName: string; lastName: string; email: string; phone?: string }) {
-await this.createFamilyButton.click();
-// assume modal opens
-await this.page.locator('input[name="familyFirstName"]').fill(parentAttrs.firstName);
-await this.page.locator('input[name="familyLastName"]').fill(parentAttrs.lastName);
-await this.page.locator('input[name="familyEmail"]').fill(parentAttrs.email);
-if (parentAttrs.phone) await this.page.locator('input[name="familyPhone"]').fill(parentAttrs.phone);
-await this.page.locator('button[data-testid="save-family"]').click();
-// wait until modal closes
-await this.page.locator('button[data-testid="save-family"]').waitFor({ state: 'detached' });
-}
-
-
-async submit() {
-await Promise.all([
-this.page.waitForResponse(response => response.url().includes('/students') && response.status() < 400),
-this.submitButton.click(),
-]);
-}
-
-
-async getValidationErrors() {
-const items = await this.page.locator('.field-error').allTextContents();
-return items;
-}
+  async saveStudent() {
+    await this.saveBtn.click();
+  }
 }
