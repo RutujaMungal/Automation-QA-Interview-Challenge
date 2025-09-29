@@ -1,34 +1,22 @@
 import { Page } from '@playwright/test';
 
-/**
- * Base Page class with common functionality
- * Extend this class for specific page objects
- */
 export class BasePage {
-  constructor(protected page: Page) {}
+constructor(protected page: Page) {}
 
-  /**
-   * Navigate to a specific path
-   */
-  async navigate(path: string): Promise<void> {
-    await this.page.goto(path);
-  }
+async navigate(path: string) {
+const base = process.env.MMS_SCHOOL_URL || process.env.BASE_URL || 'http://localhost:3000';
+await this.page.goto(base + path);
+}
 
-  /**
-   * Wait for an element and return its text
-   */
-  async getElementText(selector: string): Promise<string> {
-    const element = this.page.locator(selector);
-    await element.waitFor();
-    return await element.textContent() || '';
-  }
+async waitForLoad() {
+await this.page.waitForLoadState('networkidle');
+}
 
-  /**
-   * Check if an element is visible
-   */
-  async isElementVisible(selector: string): Promise<boolean> {
-    return await this.page.locator(selector).isVisible();
-  }
+async screenshot(name: string) {
+await this.page.screenshot({ path: `reports/screenshots/${name}.png`, fullPage: true });
+}
 
-  // TODO: Add more common methods as needed
+locator(selector: string) {
+return this.page.locator(selector);
+}
 }
