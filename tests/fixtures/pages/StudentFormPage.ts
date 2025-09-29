@@ -1,41 +1,63 @@
-import { BasePage } from './BasePage';
-import { Locator, Page } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
+this.isChildToggle = this.page.locator('input[name="isChild"]');
+this.parentSearch = this.page.locator('input[name="parentSearch"]');
+this.createFamilyButton = this.page.locator('button[data-testid="create-family"]');
+this.submitButton = this.page.locator('button[type="submit"], button[data-testid="save-student"]');
+}
 
-export class StudentFormPage extends BasePage {
-  readonly firstName: Locator;
-  readonly lastName: Locator;
-  readonly email: Locator;
-  readonly phone: Locator;
-  readonly parentDropdown: Locator;
-  readonly submitBtn: Locator;
 
-  constructor(page: Page) {
-    super(page);
-    this.firstName = page.locator('#firstName');
-    this.lastName = page.locator('#lastName');
-    this.email = page.locator('#email');
-    this.phone = page.locator('#phone');
-    this.parentDropdown = page.locator('#parentSelect');
-    this.submitBtn = page.locator('button:has-text("Save")');
-  }
+async goToAddStudent() {
+await this.navigate('/Teacher/v2/en/students/add');
+await this.waitForLoad();
+}
 
-  async goto() {
-    await this.page.goto('/Teacher/v2/en/students/add');
-  }
 
-  async fillForm(student: any) {
-    await this.firstName.fill(student.firstName);
-    await this.lastName.fill(student.lastName);
-    await this.email.fill(student.email);
-    if (student.phone) await this.phone.fill(student.phone);
-    if (student.parentName) await this.parentDropdown.selectOption({ label: student.parentName });
-  }
+async fillBasicInfo({ firstName, lastName, email, phone, dob }: any) {
+if (firstName) await this.firstName.fill(firstName);
+if (lastName) await this.lastName.fill(lastName);
+if (email) await this.email.fill(email);
+if (phone) await this.phone.fill(phone);
+if (dob) await this.dob.fill(dob);
+}
 
-  async submit() {
-    await this.submitBtn.click();
-  }
 
-  getError(field: string) {
-    return this.page.locator(`[data-testid="${field}-error"]`);
-  }
+async markAsChild() {
+if (!(await this.isChildToggle.isChecked())) await this.isChildToggle.check();
+}
+
+
+async linkToExistingParent(parentEmailOrName: string) {
+await this.parentSearch.fill(parentEmailOrName);
+// wait for suggestions and pick first
+const suggestion = this.page.locator('.parent-suggestion').first();
+await suggestion.waitFor();
+await suggestion.click();
+}
+
+
+async createNewFamily(parentAttrs: { firstName: string; lastName: string; email: string; phone?: string }) {
+await this.createFamilyButton.click();
+// assume modal opens
+await this.page.locator('input[name="familyFirstName"]').fill(parentAttrs.firstName);
+await this.page.locator('input[name="familyLastName"]').fill(parentAttrs.lastName);
+await this.page.locator('input[name="familyEmail"]').fill(parentAttrs.email);
+if (parentAttrs.phone) await this.page.locator('input[name="familyPhone"]').fill(parentAttrs.phone);
+await this.page.locator('button[data-testid="save-family"]').click();
+// wait until modal closes
+await this.page.locator('button[data-testid="save-family"]').waitFor({ state: 'detached' });
+}
+
+
+async submit() {
+await Promise.all([
+this.page.waitForResponse(response => response.url().includes('/students') && response.status() < 400),
+this.submitButton.click(),
+]);
+}
+
+
+async getValidationErrors() {
+const items = await this.page.locator('.field-error').allTextContents();
+return items;
+}
 }
