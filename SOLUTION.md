@@ -71,13 +71,3 @@ Async operations and dynamic page elements were handled using smart waits to avo
 * Are there recommended **performance benchmarks** for onboarding?
 * Any preferred approach for **test data cleanup** on staging?
 * Should we automate **external integrations** (Stripe, SendGrid) or mock them for all tests?
-
----
-
-This version:
-
-* Reads like a **real QA engineer wrote it**
-* Explains **why** choices were made
-* Mentions **real-world challenges** and trade-offs
-* Shows **business understanding**
-
