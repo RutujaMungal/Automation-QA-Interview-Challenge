@@ -1,22 +1,25 @@
 import { Page } from '@playwright/test';
 
 export class BasePage {
-constructor(protected page: Page) {}
+  constructor(protected page: Page) {}
 
-async navigate(path: string) {
-const base = process.env.MMS_SCHOOL_URL || process.env.BASE_URL || 'http://localhost:3000';
-await this.page.goto(base + path);
-}
+  async navigate(url: string) {
+    await this.page.goto(url);
+  }
 
-async waitForLoad() {
-await this.page.waitForLoadState('networkidle');
-}
+  async click(locator: string) {
+    await this.page.locator(locator).click();
+  }
 
-async screenshot(name: string) {
-await this.page.screenshot({ path: `reports/screenshots/${name}.png`, fullPage: true });
-}
+  async fill(locator: string, value: string) {
+    await this.page.locator(locator).fill(value);
+  }
 
-locator(selector: string) {
-return this.page.locator(selector);
-}
+  async getText(locator: string) {
+    return this.page.locator(locator).textContent();
+  }
+
+  async waitForVisible(locator: string, timeout = 5000) {
+    await this.page.locator(locator).waitFor({ state: 'visible', timeout });
+  }
 }
